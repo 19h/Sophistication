@@ -1,0 +1,788 @@
+"use strict";
+//var viewportwidth, viewportheight;
+var Scape = {}; var debug = 2;
+
+if ( debug !== 2 ) // just define the catcher and supress the message.
+        console.log = function ( id ) { return false; };
+$('vmmm').hide();
+
+// Inject elements which would look ugly if user hasn't got JS enabled .. sooo 1990!
+
+(function() {
+        var v, s;
+        v = document.createElement('div'); v.id = "qspin"; s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(v, s); $('qspin').hide();
+        //v = document.createElement('img'); v.id = "ztoggle"; v.src = "images/arrowd.png"; s = document.getElementsByTagName('script')[9]; s.parentNode.insertBefore(v, s);
+
+        //window.Out = setInterval( function(){
+        //        if( window.qstate !== -1 )
+        //                return function () {
+        //                        clearInterval( window.Out );
+        //                };
+        //        return Scape.f(.01);
+        //}, 10);
+})();
+
+window.Dummy = function () {
+                return  ( $("Dummy") !== null ) ?
+                                $("Dummy")
+                        :
+                                (function(){
+                                        var v = document.createElement('div');
+                                        v.id = "Dummy";
+                                        var s = document.getElementsByTagName('script')[0];
+                                        s.parentNode.insertBefore(v, s);
+                                        return new Dummy;
+                                })();
+}
+
+/***************************************************************************************************************************/
+
+Function.prototype.bind = function (object) {
+        var m = this;
+        return function () {
+                return m.apply(object, arguments);
+        };
+};
+
+function EX() {
+        this.events = [],
+        this.builtinEvts = [];
+}
+
+EX.prototype.getActionIdx = function (obj, evt, action, binding) {
+        if (obj && evt) {
+                var curel = this.events[obj][evt];
+                if (curel) {
+                        var len = curel.length;
+                        for (var i = len - 1; i >= 0; --i)
+                                if (curel[i].action == action && curel[i].binding == binding)
+                                        return i;
+                } else {
+                        return -1;
+                }
+        }
+        return -1;
+};
+
+EX.prototype.addListener = function (obj, evt, action, binding) {
+        if (this.events[obj])
+                if (this.events[obj][evt])
+                        if (this.getActionIdx(obj, evt, action, binding) == -1)
+                                var curevt = this.events[obj][evt] &&
+                                ( curevt[curevt.length] = {
+                                        action: action,
+                                        binding: binding
+                                } );
+                        else;
+                else
+                        this.events[obj][evt] = [],
+                        this.events[obj][evt][0] = {
+                                action: action,
+                                binding: binding
+                        };
+        else
+                this.events[obj] = [],
+                this.events[obj][evt] = [],
+                this.events[obj][evt][0] = {
+                        action: action,
+                        binding: binding
+                };
+};
+
+EX.prototype.removeListener = function (obj, evt, action, binding) {
+        if (this.events[obj]) {
+                if (this.events[obj][evt]) {
+                        var idx = this.actionExists(obj, evt, action, binding);
+                        if (idx >= 0) 
+                                this.events[obj][evt].splice(idx, 1);
+                }
+        }
+};
+
+EX.prototype.fireEvent = function (e, obj, evt, args) {
+        if (!e)
+                e = window.event;
+        if (obj && this.events) {
+                var evtel = this.events[obj];
+                if (evtel) {
+                        var curel = evtel[evt];
+                        if (curel) {
+                                for (var act in curel) {
+                                        var action = curel[act].action;
+                                        if (curel[act].binding) {
+                                                action = action.bind(curel[act].binding);
+                                        }
+                                        
+                                        try{
+                                                action(e, args);
+                                        } catch (e) {}
+                                }
+                        }
+                }
+        }
+};
+
+var Events = {
+        NS: new EX(), C: [],
+        listen: function ( o, e, strct, f, b ) { this.C[o] = function() { (function(){ e(); this.C[o](); }); }; return this.NS.addListener ( o, this.C[o], f, b ); },
+        fire: function ( err, o, e, a ) { return this.NS.fireEvent ( err, o, e, a ); },
+        remove: function ( o, e, a, b ) { return this.NS.removeListener ( o, e, a, b ); },
+        idx: function ( o, e, a, b ) { return this.NS.getActionIdx ( o, e, a, b ); }
+}
+
+function Evt() {}
+
+Evt.prototype.fire = function ( e ) {
+        Events.fire(null, this, e);
+};
+
+Evt.prototype.listen = function ( e, f ) {
+        return Events.NS.addListener(this, e, f);
+}
+
+Evt.prototype.remove = function ( e ) {
+        return Events.NS.removeListener(this, e);
+}
+
+function fire ( e ) { return Evx.fire ( e ); }
+function listen ( e, f ) { return Evx.listen ( e, f ); }
+function remove ( e, f ) { return Evx.remove ( e, f ); }
+
+//DBG
+//Object.prototype.log = function () { return console.log(this); }
+//Function.prototype.log = function () { return console.log(this); }
+//for (var i=0,z=[];i<=arguments.length;++i)z.push(arguments[i]); z = z.join(); z = z.substr(0,z.length-1);
+Function.prototype.debug = function () {
+        try {
+                this();
+        } catch (e) {
+                console.log("Line: " + e.line + " - " + e.message);
+        }
+};
+
+Function.prototype.trace = function () {
+        return console.trace();
+};
+
+String.prototype.fire = function () {
+        return fire(this);
+};
+
+Array.prototype.fire = function () {
+        return this.each( function (x) { console.log(typeof x) } );
+}
+
+window.assert = function (c, b) {
+        return !!c ? !! c : typeof b == "function" ? b() : false;
+        throw console.log(b), Error(b);
+};
+
+window.sethTimeout = function (m, o) {
+        var x = m + new Date().getTime(),
+                s = "" + Math.random() * 1000000 * Math.random();
+        listen(s, o);
+        setInterval(function () {
+                if (new Date() < x) fire(s), setTimeout(function () {
+                        return remove(s, o);
+                }, 10);
+                else return false;
+        }, 10);
+};
+
+window.setDT = function (c, d) {
+        return !void new Effect.toggle(new Dummy, "appear", {
+                duration: d,
+                afterFinish: function () {
+                        return c();
+                }
+        });
+}
+
+var Evx = new Evt();
+
+/*TEST*--*TEST*--*TEST*--*TEST*--*TEST*--*TEST*--*TEST*--*TEST*--*TEST*--*TEST*--*TEST*--*TEST*--*TEST*--*TEST*--*TEST*--*TEST*/
+
+function CliFire ( o, e ) {
+        return Event.observe(o, 'click', function () {
+                return e.fire();
+        });
+}
+
+// REMOVE IN PRODUCTION
+
+// -*TEST*-
+listen ( "load", function () {
+        //$$$("i/i?i"); return console.log("Injection done.");
+});
+
+fire( "load" );
+
+/*TEST*--*TEST*--*TEST*--*TEST*--*TEST*--*TEST*--*TEST*--*TEST*--*TEST*--*TEST*--*TEST*--*TEST*--*TEST*--*TEST*--*TEST*--*TEST*/
+
+Event.observe(window, "load", function () {
+        var Cache = {l: false, lock: false, xl: false, xlock: false};
+        
+        setTimeout( function () { // Page loading.
+                [/*'page',*/'ctoggle'].each(function(b){ $(b).hide(); });
+                Effect.toggle( $("offload"), "blind", {duration: 1} ); // will fire at [xy]+750, finish at [x]+1750
+                
+                setTimeout(function () {
+                        Effect.toggle( $("kern"), "blind", {duration: 1} ); // Will fire at [xyz]+1750, finish at [xyz]+2750
+                        
+                        return setTimeout(function () { // Will fire at [xyz]+2250
+                                ($("offload").parentNode).setStyle({"overflow": "visible"});
+                        }, 500);
+                }, 750);
+        }, 1500);
+        
+
+        setTimeout(function () {
+                return $("ulc").update(unescape("%09%09%09%09%3Cobject%20type%3D%22application%2Fx-shockwave-flash%22%20data%3D%22https%3A%2F%2Frapidshare.com%2Fimg2%2FUpload2Me.swf%3FmName%3Dm%26amp%3BmDomain%3Dtercept.com%26amp%3BmailText%3DThere's%2520been%2520a%2520drop%2520into%2520your%2520file%2520vault.%26amp%3BwithForm%3Dfalse%26amp%3BwithFormName%3Dno%26amp%3BwithFormMail%3Dno%26amp%3BwithFormMessage%3Dno%26amp%3BbgColor%3D0xFFFFFF%26amp%3BtextColor%3D0xBBBB%26amp%3BwebUrl%3D%26amp%3BcallAPI%3D%22%20style%3D%22width%3A%20100%25%3B%20height%3A%20160px%3B%20padding-bottom%3A%20-6px%3B%20margin-bottom%3A%20-6px%3B%22%3E%0A%09%09%09%09%09%3Cparam%20name%3D%22movie%22%20value%3D%22https%3A%2F%2Frapidshare.om%2Fimg2%2FUpload2Me.swf%3FmName%3Dm%26amp%3BmDomain%3Dtercept.com%26amp%3BmailText%3DThere's%2520been%2520a%2520drop%2520into%2520your%2520file%2520vault.%26amp%3BwithForm%3Dfalse%26amp%3BwithFormName%3Dno%26amp%3BwithFormMail%3Dno%26amp%3BwithFormMessage%3Dno%26amp%3BbgColor%3D0xFFFFFF%26amp%3BtextColor%3D0xBBBB%26amp%3BwebUrl%3D%26amp%3BcallAPI%3D%22%3E%0A%09%09%09%09%09%3Cparam%20name%3D%22quality%22%20value%3D%22high%22%20%2F%3E%0A%09%09%09%09%09%3Cparam%20name%3D%22allowScriptAccess%22%20value%3D%22always%22%20%2F%3E%0A%09%09%09%09%09%3Cparam%20name%3D%22allowFullScreen%22%20value%3D%22false%22%20%2F%3E%0A%09%09%09%09%09%3Cparam%20name%3D%22wmode%22%20value%3D%22transparent%22%20%2F%3E%0A%09%09%09%09%3C%2Fobject%3E"));
+        }, 1000);
+        
+        Event.observe($('text'), 'click', function () {
+                if (Cache.lock === false) {
+                        Cache.lock = true;
+                        
+                        if (Cache.l === false)
+                                $('text').update('<img src="images/MinCont.png" alt="Contact" />');
+                        else	$('text').update('<img src="images/PluCont.png" alt="Contact" />');
+                        
+                        Effect.toggle($('ctoggle'), 'blind', {
+                                duration: .5,
+                                afterFinish: function () {
+                                        return setTimeout( function () {
+                                                return Cache.lock = !Cache.lock;
+                                        }, 100);
+                                }
+                        });
+                        
+                        return Cache.l = !Cache.l;
+                } else {
+                        return false;
+                }
+        });
+        
+        window.astate = -1; window.wstate = -1;
+        
+        Event.observe($('atmosphere'), "click", function () {
+                if (Cache.xlock === false) {
+                        Cache.xlock = true;
+                        
+                        if (Cache.xl === false) {
+                                window.astate = 2;
+                                $('atbody').src="images/Play.png";
+                                window.Out = setInterval( function(){
+                                        if( Math.round( $('audio').volume * 100 ) == 0 || window.astate !== 2 )
+                                                return function () {
+                                                        clearInterval( window.Out );
+                                                        return (window.astate !== 2) ? 1 : pause();
+                                                };
+                                        return $('audio').volume = ( ( $('audio').volume * 100 ) - 1 ) / 100;
+                                }, 20);
+                        } else {
+                                window.astate = 3;
+                                $('atbody').src="images/Pause.png";
+                                window.In = setInterval( function(){
+                                        if( Math.round( $('audio').volume * 100) == 70 || window.astate !== 3 )
+                                                return function () {
+                                                        clearInterval( window.Out );
+                                                        return (window.astate !== 3) ? 1 : $('audio').play();
+                                                };
+                                        return $('audio').volume = ( ( $('audio').volume * 100 ) + 1 ) / 100;
+                                }, 30);
+                        }
+                        
+                        setTimeout( function () {
+                                return Cache.xlock = !Cache.xlock;
+                        }, 50);
+                        
+                        return Cache.xl = !Cache.xl;
+                } else {
+                        return false;
+                }
+        });
+        
+        //Event.observe($('qt'), 'click', function () {
+                //$('qt').update('<audio id="audio" src="//api.cld.me/8x1O/12_Time.mp3" autobuffer></audio>'); // Revision: Moved to the RS-CDN. //rapidshare.com/files/119135050/time.mp3
+                //if ( dvs === false )
+                        //setTimeout(function () {/*$('audio').play();*/ $('audio').volume = .10; window.Init = setInterval(function(){if(Math.round($('audio').volume * 100)==70 || window.astate!==-1)return function () { (window.astate!==-1)?1:$('audio').volume = Math.round(($('audio').volume)*100)/100; clearInterval( window.Init ); }; return $('audio').volume=(($('audio').volume*100)+1)/100;},60);}, 500);//rapidshare.com/files/119135050/time.mp3 - old.
+        //});
+});
+
+Scape.__init = function () { // preload $SLID content
+        Scape.__null_fetch = function ( res ) {
+                return document.createElement("img").src=res
+        }; Scape.__fetch = function ( r ) {
+                return this.__null_fetch ( r, _req_obj );
+        }; [
+                "images/sl3.png",
+                "images/sl5.png",
+                "images/sl6.png",
+        ].each( function ( re ) { return Scape.__fetch ( re ); } )
+}
+
+Scape; /*??*/
+
+/*var _0x7646 = ['g(f(){a(7 8.9!=\'5\'){4=8.9,6=8.h}b a(7 1.2!=\'5\'&&7 1.2.3!=\'5\'&&1.2.3!=0){4=1.2.3;6=1.2.c}b{4=1.e(\'d\')[0].3,6=1.e(\'d\')[0].c}},i);',
+               '|', 'split', '|document|documentElement|clientWidth|viewportwidth|undefined|viewportheight|typeof|window|innerWidth|if|else|clientHeight|'+
+               'body|getElementsByTagName|function|setInterval|innerHeight|20',  'replace', '', '\\w+', '\\b', 'g', '7 2,3;2=1;3=0;8(4(){6(2!=1||3!=0)5(4('+
+               '){e.d(\"9 b: \"+1+\"a\"+0+\" [\"+(1*0)+\"]\");2=1;3=0})()},c);', 'viewportwidth|viewportheight|vo|wo|function|return|if|var|setInterval|Re'+
+               'spawning|x|dimensions|50|log|console'];
+(function () {
+        var _1 = [_0x7646[0], _0x7646[1], _0x7646[2], _0x7646[3], _0x7646[4], _0x7646[5], _0x7646[6], _0x7646[7], _0x7646[8]];
+        var _2 = [_0x7646[9], _0x7646[1], _0x7646[2], _0x7646[10], _0x7646[4], _0x7646[5], _0x7646[6], _0x7646[7], _0x7646[8]];
+        var _3 = [_2[0], _2[1], _2[2], _2[3], _2[4], _2[5], _2[6], _2[7], _2[8]];
+        var _4 = [_1[0], _1[1], _1[2], _1[3], _1[4], _1[5], _1[6], _1[7], _1[8]];
+        eval(function (_5, _6, _7, _8, _9, _a) {
+                _9 = function (_b) {
+                        return _b.toString(36);
+                };
+                if (!_4[5][_4[4]](/^/, String)) {
+                        while (_7--) {
+                                _a[_7.toString(_6)] = _8[_7] || _7.toString(_6);
+                        }
+                        _8 = [function (_c) {
+                                return _a[_c];
+                        }];
+                        _9 = function () {
+                                return _4[6];
+                        };
+                        _7 = 1;
+                }
+                while (_7--) {
+                        if (_8[_7]) {
+                                _5 = _5[_4[4]](new RegExp(_4[7] + _9(_7) + _4[7], _4[8]), _8[_7]);
+                        }
+                }
+                return _5;
+        }(_4[0], 19, 19, _4[3][_4[2]](_4[1]), 0, {}));
+        return eval(function (_d, _e, _f, _10, _11, _12) {
+                _11 = function (_13) {
+                        return _13.toString(36);
+                };
+                if (!_3[5][_3[4]](/^/, String)) {
+                        while (_f--) {
+                                _12[_f.toString(_e)] = _10[_f] || _f.toString(_e);
+                        }
+                        _10 = [function (_14) {
+                                return _12[_14];
+                        }];
+                        _11 = function () {
+                                return _3[6];
+                        };
+                        _f = 1;
+                }
+                while (_f--) {
+                        if (_10[_f]) {
+                                _d = _d[_3[4]](new RegExp(_3[7] + _11(_f) + _3[7], _3[8]), _10[_f]);
+                        }
+                }
+                return _d;
+        }(_3[0], 15, 15, _3[3][_3[2]](_3[1]), 0, {}));
+})();*/
+
+(function () {
+        setInterval(function () {
+                if (typeof "window.vw" != "undefined") var vw = window.vw;
+                if (typeof "window.vh" != "undefined") var vh = window.vh;
+                if (typeof window.innerWidth != 'undefined') {
+                        window.vw = window.innerWidth, window.vh = window.innerHeight
+                } else if (typeof document.documentElement != 'undefined' && typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+                        window.vw = document.documentElement.clientWidth, window.vh = document.documentElement.clientHeight
+                } else {
+                        window.vw = document.getElementsByTagName('body')[0].clientWidth, window.vh = document.getElementsByTagName('body')[0].clientHeight
+                }
+                if(vw!==window.vw||vh!==window.vh) fire("dimspawn");
+        }, 10);
+})();
+
+
+(function () {
+        var _0 = _0 || [];
+        _0['push'](['_1', 'UA-23542503-2']);
+        _0['push'](['_2', '.sulayman.org']);
+        _0['push'](['_3']);
+        (function () {
+                var _1 = document['createElement']('script');
+                _1['type'] = 'text/javascript';
+                _1['async'] = true;
+                _1['src'] = ('https:' == document['location']['protocol'] ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+                var _2 = document['getElementsByTagName']('script')[0];
+                _2['parentNode']['insertBefore'](_1, _2);
+        })();
+})();
+
+// Initialize Page-Animation.
+
+(function () {
+        // Initialize CliFires
+        //CliFire( $('vmmm'), "vmmmfc" ); // Disabled in this version, coming up feature.
+        CliFire( $('ztoggle'), "ztg" );
+        CliFire( $('eolay'), "restoreUI" );
+        $("eolay").hide(); // eOverlay Helper, hide to show.
+        
+        // Initialize Resolution Watcher
+        listen("dimspawn", function () {
+                if ( window.unsli !== false ) {
+                        Scape.f(.01); //BG
+                        new Effect.Morph('vmmm', {
+                                'style': 'top: ' + Math.round ( window.vh / 2 ) + 'px; margin-top: -17px',
+                                duration: .2
+                        });
+                        new Effect.ScrollTo('body');
+                }
+        });
+        
+        if ( (window.x = document.body.offsetWidth * document.body.offsetHeight) > 1024 * 768 && x != 1027 * 1024)
+                //if ( document.body.offsetWidth > 1438 )
+                        $("Expand").show(), window.Exp = 1;
+                //else
+                        //$("Expand_alt").show(), window
+                        /*
+                                Looks mysterious...
+                        */
+})();
+
+// CoreAnimation
+(function (){
+        listen("ztg", function () {
+                new Effect.ScrollTo('body');
+                +Effect.toggle($('Expand'), 'appear');
+                setTimeout(function () {
+                        if ( window.pztg !== true )
+                                Effect.toggle($('vmmm'), 'appear'), $('vmmm').setStyle({"body":"visible"});
+                        Effect.toggle($("ztoggle"), 'appear'); window.pztg = false;
+                }, 1000 );
+                $("kern").setStyle({"height": (window.vh-336) + "px"});/*505*/
+                new Effect.Morph('vmmm', {
+                        'style': 'top: ' + ((vh > 1024) ? '680px' : vh-100) + 'px; margin-top: -45px',
+                        duration: 1.5
+                });
+                // Instead of partial overlaying, overlay the whole view with the ztg-interface
+                if ( window.pztg !== true )
+                        new Effect.Appear($('eolay'), {duration:1, from:0, to:1}), $('body').setStyle({"overflow":"hidden"});
+                // Then, show the close-button, it's part of the beginning.
+                // It will be hidden as the slide starts, the slide should not be hold.
+                // It's the corporate identity, simple, majestic, valuable and reliably qualifying for work with substance.
+                Effect.toggle( $("kern"), "blind", {duration: 1} );
+                Effect.toggle( $("ztoggle"), "slide", {duration: 1} );
+        });
+        listen("vmmmfc", function () {
+                if ( !assert( window.roadblock !== true, function () { return !console.log("rdblckd"); } ) ) return false;
+                if ( window.slblck == true ) return !!void console.log("HAHA!");
+                window.slblck = true;
+                //console.log(this); console.trace();
+                Effect.toggle( $('eolay'), 'appear' );
+                new Effect.Morph('vmmm', {
+                        'style': 'top: ' + Math.round ( window.vh / 2 ) + 'px; margin-top: -17px',
+                        duration: 1.5
+                })
+                
+                setTimeout(function () {
+                        $('vmmm').setStyle({"top":"50%","margin-top":"-17px", "left": "50%"});
+                        setTimeout(function(){
+                                new Effect.Morph('vmmm', {
+                                        'style': 'margin-left: -208px',
+                                        duration: 1.5
+                                })
+                        }, 100);
+                }, 1500)
+                
+                Scape.f = function (durate) { 
+                        setTimeout(function () {
+                                new Effect.ScrollTo('body');
+                        }, ( durate / 5 ) * 1000); return new Effect.Morph('kern', {
+                                'style': 'height: '+(window.vh/*-336*/)+'px; ',
+                                duration: durate
+                        })
+                }
+                
+                Scape.f(1.5);
+                
+                if ( window.unsli !== false ) {
+                        window.unsli = true;
+                } else {
+                        window.unsli = true;
+                }
+                
+                //window.unslick = setInterval( function () {
+                //        if ( window.unsli === false )
+                //                clearInterval(window.unslick);
+                //        new Effect.ScrollTo('body');
+                //}, 10);
+                /* DO NOT INTERVAL. */
+                
+                new Effect.Morph('kern', {
+                        'style': 'top: 0px;',
+                        duration: 2
+                })
+                
+                //$("body").setStyle({"overflow": "hidden !important"});
+                body.style.overflow = "hidden";
+                Event.observe($('vmmm'), 'click', void(0));
+                
+                setTimeout(function () { Effect.toggle( $("vmmm"), "appear", {duration: 1} ); fire("cHeroText"); return fire("sl3"); }, 2000);
+        });
+        
+        //functional listeners
+
+//(function () {
+        listen ( "cHeroTextKill", function () {
+                return (window.globHzx != "undefined") ? clearInterval(window.globHzx) : null;
+        });
+        
+        listen ( "cHeroText", function () {
+                return ( window.globHzxw = $('vmmm').offsetWidth ) && (window.globHzx = setInterval(function () {
+                        if ( $('vmmm').offsetWidth != window.globHzxw ){
+                                ( window.globHzxw = $('vmmm').offsetWidth ) && ($(/*new Effect.Morph(*/'vmmm'/*, {
+                                        'style': */).setStyle({'margin-left':'-' + ($('vmmm').offsetWidth/2) + 'px !important;'})/*,
+                                        duration: .2
+                                })*/);
+                        } else  return null;
+                }, 5));
+        });
+//})(); 
+        
+        // slides
+        
+        listen ( "sl1", function () {
+                if ( window.roadblock === true ) return false;
+                setTimeout(function () {
+                        if ( window.roadblock === true ) return false;
+                        Effect.toggle( $("vmmm"), "appear", {duration: 1} );
+                        $("slk").src = "images/sl1.png";
+                        new Effect.Morph('vmmm', {
+                                'style': 'margin-left: -286.5px',
+                                duration: .5
+                        })
+                        setTimeout(function () {
+                                new Effect.toggle( $("vmmm"), "appear", {duration: 1} );
+                                return fire("sl2");
+                        }, 1000);
+                }, 1500);
+        });
+        
+        listen ( "sl2", function () {return;
+                if ( window.roadblock === true ) return false;
+                setTimeout(function () {
+                        if ( window.roadblock === true ) return false;
+                        $("slk").src = "images/sl2.png";
+                        new Effect.Morph('vmmm', {
+                                'style': 'margin-left: -286.5px',
+                                duration: .5
+                        })
+                }, 1000);
+        });
+        
+        listen ( "sl3", function () {
+                if ( window.roadblock === true ) return false;
+                setTimeout(function () {
+                        if ( window.roadblock === true ) return false;
+                        $("slk").src = "images/sl3.png";
+                        /*new Effect.Morph*/$('slk').setStyle(/*, */{
+                                /*'style': *//*'margin-left':'-115.5px',*/'margin-top': '-123.5px', 'left': '50%'/*,
+                                duration: .01
+                        */});
+                        setTimeout(function () {
+                                new Effect.toggle( $("vmmm"), "appear", {
+                                        duration: 1,
+                                        afterFinish: function () {
+                                                return fire("sl4");
+                                        }
+                                } );
+                                //return fire("sl4");
+                        }, 1500);
+                }, 1000); 
+        });
+        
+        listen ( "sl4", function () {
+                if ( window.roadblock === true ) return false;
+                new Effect.toggle( new Dummy, "appear", {
+                        duration: 1,
+                        afterFinish: function () {
+                                new Effect.toggle( $("vmmm"), "appear", {
+                                        duration: 1,
+                                        afterFinish: function () {
+                                                setDT( function () {
+                                                        $("vmmm").update("<div id='test' style='text-align: center;'>I design interfaces, backends <i>&amp;</i> programming interfaces,<br/>applications for mobile devices, Windows and Macintosh.</div>");/*<br/>write music and screenplays,*/
+                                                        new Effect.toggle( $("vmmm"), "appear", {
+                                                                duration: 1,
+                                                                afterFinish: function () {
+                                                                        new Effect.toggle( new Dummy, "appear", {
+                                                                                duration: 3,
+                                                                                afterFinish: function () {
+                                                                                        new Effect.toggle( $("vmmm"), "appear", {
+                                                                                                duration: 1,
+                                                                                                afterFinish: function () {
+                                                                                                        setDT( function () {
+                                                                                                                $("vmmm").update('<img src="images/sl5.png" alt="MMmk!" id ="slk"/>').setStyle({"margin-top":"-137px"});
+                                                                                                                new Effect.toggle( $("vmmm"), "appear", {
+                                                                                                                        duration: 1,
+                                                                                                                        afterFinish: function () {
+                                                                                                                                fire("sl5");
+                                                                                                                        }
+                                                                                                                } );
+                                                                                                        }, 3 )
+                                                                                                }
+                                                                                        } );
+                                                                                }
+                                                                        });
+                                                                }
+                                                        } );
+                                                }, 1.5 )
+                                        }
+                                } );
+                        }
+                });
+        });
+        
+        listen ( "sl5", function () {
+                if ( window.roadblock === true ) return false;
+                new Effect.toggle( new Dummy, "appear", {
+                        duration: 3,
+                        afterFinish: function () {
+                                new Effect.toggle( $("vmmm"), "appear", {
+                                        duration: 1,
+                                        afterFinish: function () {
+                                                setDT( function () {
+                                                        $("vmmm").update("<div id='test' style='text-align: center;'>I plan, build and optimize realtime-geosystems,<br/>high-scalable mobile-platforms, HPC & balancing clouds. </div>").setStyle({"margin-top":"-" + ($('vmmm').offsetWidth/2) + "px"});
+                                                        new Effect.toggle( $("vmmm"), "appear", {
+                                                                duration: 1,
+                                                                afterFinish: function () {
+                                                                        setDT( function () {
+                                                                                new Effect.toggle( $("vmmm"), "appear", {
+                                                                                        duration: 1,
+                                                                                        afterFinish: function () {
+                                                                                                setDT( function () {
+                                                                                                        $("vmmm").update('<img src="images/sl6.png" alt="MMmk!" id ="slk"/>').setStyle({"margin-top":"-127px"});
+                                                                                                        new Effect.toggle( $("vmmm"), "appear", {
+                                                                                                                duration: 1,
+                                                                                                                afterFinish: function () {
+                                                                                                                        setDT(function () {
+                                                                                                                                new Effect.toggle( $("vmmm"), "appear", {
+                                                                                                                                        duration: 1,
+                                                                                                                                        afterFinish: function () {
+                                                                                                                                                        $("vmmm").update("<div id='test' style='text-align: center;'>I fight for people to rethink conventions, to reinvent conventions,<br/>I develop new ways to change the way we experience things.</div>").setStyle({"margin-top":"-" + ($('vmmm').offsetWidth/2) + "px"});
+                                                                                                                                                        new Effect.toggle( $("vmmm"), "appear", {
+                                                                                                                                                                duration: 1,
+                                                                                                                                                                afterFinish: function () {
+                                                                                                                                                                        
+                                                                                                                                                                }
+                                                                                                                                                        } );
+                                                                                                                                        }
+                                                                                                                                } );
+                                                                                                                        }, 5);
+                                                                                                                }
+                                                                                                        } );
+                                                                                                }, 2 );
+                                                                                        }
+                                                                                } );
+                                                                        }, 3);
+                                                                }
+                                                        } );
+                                                }, 1 )
+                                        }
+                                } );
+                        }
+                });
+        });
+        
+        /*
+                                                                        setDT( function () {
+                                                                                $("vmmm").update('<img src="images/sl6.png" alt="MMmk!" id ="slk"/>').setStyle({"margin-top":"-127px"});
+                                                                                new Effect.toggle( $("vmmm"), "appear", {
+                                                                                        duration: 1,
+                                                                                        afterFinish: function () {
+                                                                                                fire("sl6");
+                                                                                        }
+                                                                                } );
+                                                                        }, 2 );
+        */
+        
+        listen ( "sl6", function () {
+                if ( window.roadblock === true ) return false;
+                new Effect.toggle( new Dummy, "appear", {
+                        duration: 3,
+                        afterFinish: function () {
+                                new Effect.toggle( $("vmmm"), "appear", {
+                                        duration: 1,
+                                        afterFinish: function () {
+                                                setDT( function () {
+                                                        $("vmmm").update("<div id='test' style='text-align: center;'>I plan, build and optimize realtime-geosystems,<br/>high-scalable mobile-platforms, HPC & balancing clouds. </div>").setStyle({"margin-top":"-" + ($('vmmm').offsetWidth/2) + "px"});
+                                                        new Effect.toggle( $("vmmm"), "appear", {
+                                                                duration: 1,
+                                                                afterFinish: function () {
+                                                                        setDT( function () {
+                                                                                $("vmmm").update('<img src="images/sl6.png" alt="MMmk!" id ="slk"/>').setStyle({"margin-top":"-137px"});
+                                                                                new Effect.toggle( $("vmmm"), "appear", {
+                                                                                        duration: 1,
+                                                                                        afterFinish: function () {
+                                                                                                console.log("showing? ...");
+                                                                                        }
+                                                                                } );
+                                                                        }, 2 )
+                                                                }
+                                                        } );
+                                                }, 1 )
+                                        }
+                                } );
+                        }
+                });
+        });
+        
+        window.fire = fire;
+        window.listen = listen;        
+        
+        listen ( "expandUI", function () {
+                if ( window.expndrblck === true ) return false; window.expndrblck = true;
+                +new Effect.toggle("Expand", "appear", { afterFinish: function () { $("Expand").src = ( $("Expand").src.substr($("Expand").src.length-17, $("Expand").src.length) == "images/Expend.png" ) ? "images/Expand.png" : "images/Expend.png"; return +new Effect.toggle("Expand", "appear"); } });
+                ["trailer", "project", "contact", "notes", "footer"].each (function(e){ console.log(+new Effect.toggle($(e), "blind")); });
+                setTimeout(function () { return window.expndrblck = false; }, 1000);
+        });
+        
+        CliFire( $("Expand"), "expandUI" );
+        
+        listen ( "restoreUI", function () {
+                if ( window.roadblock === true ) return false;
+                window.slblck = false;
+                window.roadblock = true;
+                $("vmmm").update('<img src="images/whomeis.png" alt="MMmk!" id ="slk"/>');
+                window.unsli = false;
+                fire("cHeroTextKill");
+                new Effect.Morph('kern', {
+                        'style': 'left: 0; top: 336px;',/* height: 455px;*/
+                        duration: 1
+                })
+                new Effect.Morph('vmmm', {
+                        'style': 'top: ' + ((vh > 1024) ? '680px' : vh-50) + '; left: 50%; margin-left: -208px !important;',
+                        duration: 1
+                });
+                
+                setTimeout(function () {
+                        setTimeout(function () {
+                                body.style.overflow = "visible";
+                                return $('vmmm').hide();
+                        }, 1000);
+                        return Effect.toggle($('vmmm'), 'appear');
+                }, 1000); // 2000 if yet sliding, 1000 if not sliding.
+                
+                setTimeout(function () { // barrrrrrrier.
+                        return window.roadblock = false;
+                }, 3000);
+                
+                new Effect.Appear($('eolay'), {duration:1, from:1.0, to:0});
+                
+                setTimeout(function () {
+                        window.pztg = true;
+                        return fire("ztg");
+                }, 2000);
+        });
+}).debug();
+
+//setTimeout(function () {
+//        fire("ztg");
+//        setDT(function () {
+//                return fire("vmmmfc");
+//        }, 2);
+//}, 1000);

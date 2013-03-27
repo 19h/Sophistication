@@ -1,0 +1,4 @@
+killall -9 node ;
+cd /data/Relay/DisPub ;
+npm install faye mime path ;
+cd node_modules ; cd spdy ; git pull ; clear

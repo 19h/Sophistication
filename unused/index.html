@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html>
+        
+        <head>
+                <link rel="alternate" type="application/rss+xml" title="strobe.cc" href="/feeds/content.xml"
+                />
+                <!--<script src="https://www.google.com/jsapi?key=ABQIAAAATV8s-yZOF3HmYPluQ5cMWBSc8_2eGK2TJ0LDO8RPpO2cGu9BPxQpxhQ-0VDtf2t9DLJa_xg92SWDXQ"
+                type="text/javascript"></script>-->
+                <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.3/jquery.min.js"></script>-->
+                <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+                <meta name="generator" content="Docutils 0.7: http://docutils.sourceforge.net/" />
+                <meta name="author" content="Steven Robertson" />
+                <title>Roll your own JavaScript lambda syntax</title>
+                <link rel="stylesheet" type="text/css" href="style/stylesheet.css" />
+                <style type="text/css">
+                        /* resets */
+                        body, h1, h2, h3, h4, h5, blockquote, pre, code, cite, a {
+                                margin: 0;
+                                padding: 0;
+                                border: 0;
+                                outline: 0;
+                                font-size: 100%;
+                                font-weight: normal;
+                                text-decoration: none;
+                                vertical-align: baseline;
+                                background: transparent;
+                                color: black;
+                        }
+                        img {
+                                border: none;
+                        }
+                        /* all fonts, for ease of screwing around with typekit */
+                        body {
+                                font-family:"SkolarWeb", "skolar-2", "Skolar", "Georgia", serif;
+                        }
+                        div.topbar, .footnote, .footnote-reference, .caption, div.big, div.fhdr, a.ftop1l {
+                                font-family:"mentone-1", "mentone-2", "Mentone", sans-serif;
+                        }
+                        div.docinfo_key, div.contents p, h2, h3, .smallcaps {
+                                font-family:"ff-meta-sc-web-pro-1", "ff-meta-sc-web-pro-2", "MetaPlusNormal-Caps", sans-serif;
+                                text-transform: lowercase;
+                        }
+                        pre, tt {
+                                font-family:"inconsolata-1", "inconsolata-2", monospace;
+                        }
+                        pre {
+                                line-height: normal;
+                        }
+                        div.blockcode {
+                                margin-bottom: 1em;
+                        }
+                        /* page basics, grid layout. */
+                        .iwrap {
+                                padding-left: 205px;
+                                margin-right: 205px;
+                        }
+                        .fwrap {
+                                padding-left: 90px;
+                                margin-right: 90px;
+                        }
+                        .bcen1 {
+                                position: relative;
+                                margin: auto;
+                                width: 660px;
+                        }
+                        .fcen1 {
+                                width: 900px;
+                                margin: auto;
+                                padding: 0px;
+                        }
+                        .fcen2 {
+                                width: 900px;
+                                margin-left: -90px;
+                        }
+                        a {
+                                color: #04a;
+                                text-decoration: none;
+                        }
+                        h1 {
+                                font-size: 220%;
+                        }
+                        h2, h3 {
+                                margin-bottom: 1em;
+                        }
+                        h2 {
+                                font-size: 135%;
+                        }
+                        h3 {
+                                font-size: 115%;
+                        }
+                        h1 a, h2 a, h3 a, h4 a, h5 a {
+                                color: black;
+                        }
+                        div.content {
+                                font-size: 110%;
+                                color: #111;
+                                line-height: 140%;
+                        }
+                        .w1, .w2, .w3, .w4, .w5, .w6, .w7, .w8, .w9, .w10, .w11 {
+                                padding-right: 15px;
+                        }
+                        /* only indent nested lists */
+                        ul {
+                                -moz-padding-start: 0;
+                        }
+                        ul ul {
+                                -moz-padding-start: 60px;
+                        }
+                        li {
+                                margin: 1em 0;
+                        }
+                        .w1 {
+                                width: 45px;
+                        }
+                        .w2 {
+                                width: 105px;
+                        }
+                        .w3 {
+                                width: 165px;
+                        }
+                        .w4 {
+                                width: 225px;
+                        }
+                        .w5 {
+                                width: 285px;
+                        }
+                        .w6 {
+                                width: 345px;
+                        }
+                        .w7 {
+                                width: 405px;
+                        }
+                        .w8 {
+                                width: 465px;
+                        }
+                        .fl {
+                                float: left;
+                        }
+                        .fr {
+                                float: right;
+                        }
+                        .ma {
+                                margin: auto;
+                        }
+                        .fw5 {
+                                font-weight: 500;
+                        }
+                        .fw7 {
+                                font-weight: 700;
+                        }
+                        .fsi {
+                                font-style: italic;
+                        }
+                        .fsn {
+                                font-style: normal;
+                        }
+                        .fs9 {
+                                font-size: 90%;
+                        }
+                        div.topbar {
+                                width: 100%;
+                                min-width: 860px;
+                                height: 2.5em;
+                                color: white;
+                                background-color: #333;
+                                background: -webkit-gradient(linear, left top, left bottom, from(#555), to(#FFF), color-stop(0.8, #111), color-stop(0.8001, #DDD));
+                                background: -moz-linear-gradient(top, #555, #111 80%, #DDD 80%, #FFF);
+                                -moz-background-size: 100% 100%;
+                                -webkit-background-size: 100% 100%;
+                        }
+                        div.topbar div a {
+                                color: white;
+                        }
+                        div.topleft {
+                                padding-left: 5px;
+                                font-size: 160%;
+                                float: left;
+                        }
+                        div.topleft a {
+                                font-weight: 700;
+                        }
+                        div.topright {
+                                padding: .4em 5px .2em;
+                                font-size: 110%;
+                                text-align: right;
+                        }
+                        div.main {
+                                margin: 5em auto 0;
+                                min-height: 20em;
+                        }
+                        sup {
+                                line-height: 0pt;
+                        }
+                        div.fnwrap {
+                                position: relative;
+                        }
+                        span.fntarget {
+                                position: absolute;
+                                left: 0;
+                        }
+                        .footnote {
+                                color: #333;
+                                line-height: 110%;
+                                font-size: 80%;
+                                position: absolute;
+                                left: -205px;
+                                width: 190px;
+                                padding-right: 15px;
+                                text-align: right;
+                        }
+                        .footnote-reference {
+                                font-size: 90%;
+                        }
+                        div.fnwrap .footnote {
+                                top: -45px;
+                        }
+                        span.fntarget .footnote {
+                                margin: 0;
+                        }
+                        /* all footer stuff */
+                        div.footer {
+                                display: inline;
+                                position: relative;
+                                margin: 0;
+                                padding: 0;
+                        }
+                        div.footer>div>div>div>div a {
+                                color: #acf;
+                        }
+                        div.fbar {
+                                width: 100%;
+                                min-width: 900px;
+                                padding: 10px 0;
+                                color: white;
+                                margin: 0;
+                        }
+                        div.ftop {
+                                background-color: #222;
+                                height: 90px;
+                                margin-top: 4em;
+                                background: -webkit-gradient(linear, left top, left bottom, from(#444), to(#111));
+                                background: -moz-linear-gradient(top, #444, #111);
+                                -moz-background-size: 100% 100%;
+                                -webkit-background-size: 100% 100%;
+                        }
+                        div.fbot {
+                                height: 175px;
+                                background-color: #111;
+                        }
+                        div.fhdr {
+                                font-weight: bold;
+                        }
+                        div.fhdra {
+                                padding-bottom: .6em;
+                        }
+                        div.fhdrb {
+                                margin-bottom: 0em;
+                        }
+                        div.ftop1 {
+                                position: absolute;
+                                left: -180px;
+                                width: 160px;
+                                padding: 0 15px 0 5px;
+                                line-height: 90px;
+                        }
+                        a.ftop1l {
+                                font-size: 200%;
+                                font-weight: 700;
+                                color: white;
+                        }
+                        blockquote {
+                                padding: 0.5em 2em;
+                                background-color: #eee;
+                        }
+                        div.abstract {
+                                font-style: italic;
+                                font-size: 110%;
+                        }
+                        div.docinfo_value a {
+                                font-style: italic;
+                        }
+                        div.docinfo {
+                                margin: 1em 0 2em;
+                        }
+                        div.docinfo_key {
+                                font-size: 110%;
+                        }
+                        div.contents {
+                                margin: 0 0 3em 0;
+                        }
+                        div.contents p {
+                                padding: 0;
+                                margin: 1em 0 0 0;
+                        }
+                        div.contents a {
+                                color: black;
+                        }
+                        div.contents ul {
+                                margin: 0;
+                                list-style: none;
+                        }
+                        div.contents>ul {
+                                -moz-padding-start: 0;
+                                list-style: decimal;
+                        }
+                        div.contents li {
+                                margin: 0;
+                        }
+                        .comments {
+                                margin: 3em 0;
+                                padding: 1em;
+                                border: 3px solid gray;
+                        }
+                        /* Pygments */
+                        table.highlighttable {
+                                background: #f8f8f8;
+                                width: 660px;
+                                line-height: 100%;
+                        }
+                        table.highlighttable pre {
+                                font-size: 80%;
+                        }
+                        div.linenodiv {
+                                border-right: 1px solid #999;
+                                padding-right: 0.15em;
+                        }
+                        div.linenodiv pre {
+                                color: #666;
+                        }
+                        img.eqn {
+                                padding-top: 0.2em;
+                        }
+                        span.mmleqn {
+                                display: none;
+                                white-space: nowrap;
+                        }
+                        @font-face {
+                                font-family:"STIXGeneral";
+                                src: url("http://strobe.cc/media/stix/STIXGeneral.otf");
+                        }
+                        @font-face {
+                                font-family:"STIXGeneral";
+                                src: url("http://strobe.cc/media/stix/STIXGeneralItalic.otf");
+                                font-style: italic;
+                        }
+                        math {
+                                font-family:"skolar-1", "skolar-2", "STIXGeneral", serif;
+                        }
+                        div.align-right {
+                                float: right;
+                                position: relative;
+                                margin-left: 1em;
+                                width: 240px;
+                        }
+                        div.align-left {
+                                float: left;
+                                position: relative;
+                                margin-left: 1em;
+                                width: 240px;
+                        }
+                        p.caption {
+                                font-size: 85%;
+                        }
+                        div.align-right p.caption, div.align-right img.figimg {
+                                width: 360px;
+                        }
+                        div.align-left p.caption, div.align-left img.figimg {
+                                position: relative;
+                                width: 360px;
+                                left: -120px;
+                        }
+                </style>
+        </head>
+        
+        <body>
+                <div class="topbar">
+                        <div class="topleft">
+                                <a href="/">strobe.cc</a>
+                        </div>
+                        <div class="topright">
+                                <a href="/about/">about / source</a>
+                        </div>
+                </div>
+                <div class="iwrap">
+                        <div class="bcen1">
+                                <div class="main">
+                                        <h1>
+                                                <a href="/js_lambda/">Roll your own JavaScript lambda syntax</a>
+                                        </h1>
+                                        <div class="abstract">The syntax for anonymous functions in JavaScript sucks. I found it well
+                                                worth the trouble to design and implement something better.</div>
+                                        <div class="docinfo">
+                                                <div class="w3 fl">
+                                                        <div class="docinfo_key">Published</div>
+                                                        <div class="docinfo_value">09 Dec 2010</div>
+                                                </div>
+                                                <div class="w3 fl">
+                                                        <div class="docinfo_key">Edited</div>
+                                                        <div class="docinfo_value">09 Dec 2010
+                                                                <a href="/js_lambda/history/">(history)</a>
+                                                        </div>
+                                                </div>
+                                                <div class="w5 fl">
+                                                        <div class="docinfo_key">Tagged</div>
+                                                        <div class="docinfo_value">Web · JavaScript · Bikesheds · Article</div>
+                                                </div>
+                                                <div style="clear: both;"></div>
+                                        </div>
+                                        <div class="content">
+                                                <div class="contents topic" id="contents">
+                                                        <p class="topic-title first">Contents</p>
+                                                        <ul class="simple">
+                                                                <li>
+                                                                        <a class="reference internal" href="#why-bother" id="id11">Why bother?</a>
+                                                                </li>
+                                                                <li>
+                                                                        <a class="reference internal" href="#implementation" id="id12">Implementation</a>
+                                                                </li>
+                                                                <li>
+                                                                        <a class="reference internal" href="#choosing-a-syntax" id="id13">Choosing a syntax</a>
+                                                                </li>
+                                                                <li>
+                                                                        <a class="reference internal" href="#works-for-me" id="id14">&quot;Works for me&quot;</a>
+                                                                </li>
+                                                        </ul>
+                                                </div>
+                                                <p>In my current project, I&#8217;m using the
+                                                        <a class="reference external"
+                                                        href="http://jquery.com/">jQuery</a>and
+                                                        <a class="reference external" href="http://vis.stanford.edu/protovis/">Protovis</a>JavaScript libraries. Idiomatic jQuery code often uses
+                                                        <a class="reference external"
+                                                        href="http://en.wikipedia.org/wiki/Anonymous_function">lambdas</a>for event handlers, and Protovis essentially requires them to get anything
+                                                        done.</p>
+                                                <p>This is a problem, because the syntax for JavaScript lambdas is downright
+                                                        terrible. Every time I have to type
+                                                        <tt class="docutils literal">(function(d) { return d.tx; })</tt>, a baby seal dies. Because I have
+                                                        killed it. Out of
+                                                        <em>rage</em>.</p>
+                                                <p>So I set out to design and implement a better variant.</p>
+                                                <div class="section" id="why-bother">
+                                                        <h2>
+                                                                <a class="toc-backref" href="#id11">Why bother?</a>
+                                                        </h2>
+                                                        <p>
+                                                                <em>&quot;It&#8217;s just syntax. So what if you have to type a few extra
+                                                                        characters?&quot;</em>
+                                                        </p>
+                                                        <p>Between evaluating syntax options, learning a Haskell parsing library,
+                                                                writing the parser, and various tests and tweaks, building my alternative
+                                                                lambda syntax took about a day. Stack up the time it takes to type out
+                                                                <tt
+                                                                class="docutils literal">
+                                                                        <span class="pre">function(&#8230;)</span>{ return
+                                                                        <span class="pre">&#8230;;}</span>
+                                                                        </tt>once for each lambda in, say, a year&#8217;s worth of coding, and it&#8217;s
+                                                                        almost certainly less. So, yeah, if typing time was the factor here, it&#8217;s
+                                                                        hard to justify building your own personal lambda syntax.</p>
+                                                        <p>But syntax is about much more than keystrokes. It&#8217;s about flow.</p>
+                                                        <p>As
+                                                                <a class="reference external" href="http://www.python.org/dev/peps/pep-0008/">van Rossum famously noted</a>, code is read more often than it is written. The more complex an application,
+                                                                the more difficult it is to keep the entire thing in memory, moreso when
+                                                                parts of the code aren&#8217;t authored by you. An ugly bit of syntax confronts
+                                                                us every time we return to previously-written code, and when we have to
+                                                                claw understanding from a steaming pile of braces for the fifth time, it
+                                                                can build frustration, even resentment — or just interrupt a train of thought.</p>
+                                                        <p>Plus, programmers are lazy creatures. If a language construct is obnoxious
+                                                                to type, we&#8217;ll go out of our way to avoid using it — even when the
+                                                                resulting code is less clear or technically sound. After all, when I&#8217;m
+                                                                holding a complicated data structure in my head, the last thing I want
+                                                                to do is start counting braces.</p>
+                                                </div>
+                                                <div class="section" id="implementation">
+                                                        <h2>
+                                                                <a class="toc-backref" href="#id12">Implementation</a>
+                                                        </h2>
+                                                        <p>The sane approach to tweaking JavaScript syntax is to modify the source
+                                                                before it hits the browser&#8217;s script engine. This can be done client-side
+                                                                or server-side.</p>
+                                                        <p>The stock Protovis library actually includes client-side support for rewriting
+                                                                function expressions (see
+                                                                <a class="reference internal" href="#below">below</a>) to use standard syntax on browsers which don&#8217;t support them. It
+                                                                does this by running a regex-based parser
+                                                                <sup>
+                                                                        <a class="footnote-reference" href="#id2" id="id1">1</a>
+                                                                </sup>
+                                                                <span class="fntarget" id="id2_target"></span>over the source and feeding it to eval(). To get the source to
+                                                                Protovis, you can either embed it into the page, in a
+                                                                <tt class="docutils literal">script</tt>tag with a special
+                                                                <tt class="docutils literal">type</tt>attribute (
+                                                                <tt class="docutils literal">text/javascript+protovis</tt>), or load it yourself with an XHR and pass
+                                                                it in.</p>
+                                                        <div class="fnwrap">
+                                                                <p class="footnote" id="id2">
+                                                                        <a class="fn-backref" href="#id1">1</a>I know, &quot;eww&quot;. But it does work.</p>
+                                                        </div>
+                                                        <p>This method has a number of flaws, not least of which is elegance. Unless
+                                                                you handle things manually, you can&#8217;t see into the namespace of code
+                                                                loaded this way from outside the eval(), and many JavaScript debuggers
+                                                                don&#8217;t seem to look inside such statements. Then there&#8217;s the
+                                                                need for the XHR; combining
+                                                                <tt class="docutils literal">src</tt>and
+                                                                <tt class="docutils literal">type</tt>to reprocess remote scripts doesn&#8217;t seem to work either.</p>
+                                                        <p>Better to have your server do it. For JavaScript that gets served statically,
+                                                                you can configure your parser to update the static files from your source
+                                                                in your deployment script or using commit hooks. During local development,
+                                                                you might consider using a utility to monitor your source directories and
+                                                                trigger rebuilds (
+                                                                <a class="reference external" href="http://bitbucket.org/srobertson/watchbuildrun">here&#8217;s mine</a>) so that you can see changes to your JavaScript instantly.</p>
+                                                        <p>If your script is inline, or served by your application, the process is
+                                                                even easier — just hook your parser into your template engine, maybe add
+                                                                a bit of caching, and you&#8217;re all set. The specifics of this vary
+                                                                wildly from framework to framework, but most provide at least one method
+                                                                for this to work.</p>
+                                                        <p>There are many valid approaches, of course. Do whatever works best for
+                                                                your project.</p>
+                                                        <p>In my case,
+                                                                <a class="reference external" href="http://docs.yesodweb.com/">Yesod</a>allows you to depend on multiple JavaScript snippets from page templates.
+                                                                On rendering a page, the framework deduplicates the snippets, does some
+                                                                variable and URL substitution, and assembles the results into a single
+                                                                hash-named file that gets served statically for inclusion into a page&#8217;s
+                                                                <tt
+                                                                class="docutils literal">&lt;head&gt;</tt>. I just tossed my parser in front of this mechanism,
+                                                                        which took care of everything. (Details and code in a later article.)</p>
+                                                </div>
+                                                <div class="section" id="choosing-a-syntax">
+                                                        <h2>
+                                                                <a class="toc-backref" href="#id13">Choosing a syntax</a>
+                                                        </h2>
+                                                        <p>To compare my options, I took three different functions from the source,
+                                                                tried different approaches, and picked the one I liked best. The first
+                                                                of these functions,
+                                                                <tt class="docutils literal">mkItem()</tt>, contains a typical jQuery one-line event handler.</p>
+                                                        <div
+                                                        class="blockcode">
+                                                                <table class="highlighttable">
+                                                                        <tr>
+                                                                                <td>
+                                                                                        <div class="linenodiv" style="background-color: #f0f0f0; padding-right: 10px">
+                                                                                                <pre>1 2 3 4</pre>
+                                                                                        </div>
+                                                                                </td>
+                                                                                <td class="code">
+                                                                                        <div class="highlight" style="background: #f8f8f8">
+                                                                                                <pre>
+                                                                                                        <span style="color: #008000; font-weight: bold">function</span>mkItem(acts, node) {
+                                                                                                        <span style="color: #008000; font-weight: bold">return</span>$(
+                                                                                                        <span style="color: #BA2121">&#39;&lt;div /&gt;&#39;</span>, {
+                                                                                                        <span style="color: #BA2121">&#39;class&#39;</span>
+                                                                                                        <span style="color: #666666">:</span>
+                                                                                                        <span style="color: #BA2121">&#39;flowItem&#39;</span>}).html(node.activity) .click(
+                                                                                                        <span style="color: #008000; font-weight: bold">function</span>() { $(
+                                                                                                        <span style="color: #008000; font-weight: bold">this</span>).replaceWith(mkSel(acts, node)); }); }</pre>
+                                                                                        </div>
+                                                                                </td>
+                                                                        </tr>
+                                                                </table>
+                                                </div>
+                                                <p>
+                                                        <tt class="docutils literal">mkProb()</tt>nests one event handler inside the declaration of another.
+                                                        The example is a bit pathological, and I certainly wouldn&#8217;t put this
+                                                        in a tutorial, but it&#8217;s code that I actually wrote. Since I&#8217;m
+                                                        maintaining it, I want to make sure that the new syntax works here, too.</p>
+                                                <div class="blockcode">
+                                                        <table class="highlighttable">
+                                                                <tr>
+                                                                        <td>
+                                                                                <div class="linenodiv" style="background-color: #f0f0f0; padding-right: 10px">
+                                                                                        <pre>1 2 3 4 5 6 7 8 9 10 11 12 13</pre>
+                                                                                </div>
+                                                                        </td>
+                                                                        <td class="code">
+                                                                                <div class="highlight" style="background: #f8f8f8">
+                                                                                        <pre>
+                                                                                                <span style="color: #008000; font-weight: bold">function</span>mkProb(node, choice) {
+                                                                                                <span style="color: #008000; font-weight: bold">return</span>$(
+                                                                                                <span style="color: #BA2121">&#39;&lt;div /&gt;&#39;</span>, {
+                                                                                                <span style="color: #BA2121">&#39;class&#39;</span>
+                                                                                                <span style="color: #666666">:</span>
+                                                                                                <span style="color: #BA2121">&quot;flowProb&quot;</span>}).html(choice.prob) .click(
+                                                                                                <span style="color: #008000; font-weight: bold">function</span>() { $(
+                                                                                                <span style="color: #008000; font-weight: bold">this</span>).replaceWith($(
+                                                                                                <span style="color: #BA2121">&#39;&lt;div /&gt;&#39;</span>, {
+                                                                                                <span style="color: #BA2121">&#39;class&#39;</span>
+                                                                                                <span style="color: #666666">:</span>
+                                                                                                <span style="color: #BA2121">&#39;flowProbStatic&#39;</span>}).html( $(
+                                                                                                <span style="color: #BA2121">&#39;&lt;input /&gt;&#39;</span>, {
+                                                                                                <span style="color: #BA2121">&#39;type&#39;</span>
+                                                                                                <span style="color: #666666">:</span>
+                                                                                                <span style="color: #BA2121">&#39;text&#39;</span>,
+                                                                                                <span style="color: #BA2121">&#39;value&#39;</span>
+                                                                                                <span style="color: #666666">:</span>choice.prob}) .change(
+                                                                                                <span style="color: #008000; font-weight: bold">function</span>() {
+                                                                                                <span style="color: #008000; font-weight: bold">var</span>newVal
+                                                                                                <span style="color: #666666">=</span>
+                                                                                                <span style="color: #008000">parseFloat</span>($(
+                                                                                                <span style="color: #008000; font-weight: bold">this</span>).val()); choice.prob
+                                                                                                <span style="color: #666666">=</span>(newVal
+                                                                                                <span style="color: #666666">==</span>
+                                                                                                <span style="color: #008000; font-weight: bold">NaN</span>)
+                                                                                                <span style="color: #666666">?</span>
+                                                                                                <span style="color: #666666">0</span>
+                                                                                                <span style="color: #666666">:</span>newVal; updateChoices(node); }) )); }); }</pre>
+                                                                                </div>
+                                                                        </td>
+                                                                </tr>
+                                                        </table>
+                                        </div>
+                                        <p>Finally,
+                                                <tt class="docutils literal">pvscatter()</tt>, which renders a Protovis chart
+                                                <sup>
+                                                        <a class="footnote-reference" href="#id5" id="id4">2</a>
+                                                </sup>
+                                                <span class="fntarget" id="id5_target"></span>, uses lambdas as
+                                                <a class="reference external" href="http://en.wikipedia.org/wiki/Combinator">combinators</a>in a more functional programming style.</p>
+                                        <div class="fnwrap">
+                                                <p class="footnote" id="id5">
+                                                        <a class="fn-backref" href="#id4">2</a>The code for the axes has been removed, but this should still draw the
+                                                        actual data.</p>
+                                        </div>
+                                        <div class="blockcode">
+                                                <table class="highlighttable">
+                                                        <tr>
+                                                                <td>
+                                                                        <div class="linenodiv" style="background-color: #f0f0f0; padding-right: 10px">
+                                                                                <pre>1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21</pre>
+                                                                        </div>
+                                                                </td>
+                                                                <td class="code">
+                                                                        <div class="highlight" style="background: #f8f8f8">
+                                                                                <pre>
+                                                                                        <span style="color: #008000; font-weight: bold">function</span>pvscatter(data, tgt_id) {
+                                                                                        <span style="color: #008000; font-weight: bold">var</span>w
+                                                                                        <span style="color: #666666">=</span>
+                                                                                        <span style="color: #666666">600</span>, h
+                                                                                        <span style="color: #666666">=</span>
+                                                                                        <span style="color: #666666">500</span>, x
+                                                                                        <span style="color: #666666">=</span>pv.Scale.linear(data,
+                                                                                        <span style="color: #008000; font-weight: bold">function</span>(d) {
+                                                                                        <span style="color: #008000; font-weight: bold">return</span>
+                                                                                        <span style="color: #666666">0</span>; },
+                                                                                        <span style="color: #008000; font-weight: bold">function</span>(d) {
+                                                                                        <span style="color: #008000; font-weight: bold">return</span>d.y0
+                                                                                        <span style="color: #666666">&gt;</span>
+                                                                                        <span style="color: #666666">0</span>
+                                                                                        <span style="color: #666666">?</span>d.time
+                                                                                        <span style="color: #666666">:</span>
+                                                                                        <span style="color: #666666">0</span>; }) .range(
+                                                                                        <span style="color: #666666">0</span>, w).nice(), y
+                                                                                        <span style="color: #666666">=</span>pv.Scale.linear(data,
+                                                                                        <span style="color: #008000; font-weight: bold">function</span>(d) {
+                                                                                        <span style="color: #008000; font-weight: bold">return</span>
+                                                                                        <span style="color: #666666">0</span>; },
+                                                                                        <span style="color: #008000; font-weight: bold">function</span>(d) {
+                                                                                        <span style="color: #008000; font-weight: bold">return</span>d.y0; }) .range(
+                                                                                        <span style="color: #666666">0</span>, h).nice(), vis
+                                                                                        <span style="color: #666666">=</span>
+                                                                                        <span style="color: #008000; font-weight: bold">new</span>pv.Panel().width(w).height(h).canvas(tgt_id); vis.add(pv.Area)
+                                                                                        .data(data) .bottom(
+                                                                                        <span style="color: #666666">1</span>) .left(
+                                                                                        <span style="color: #008000; font-weight: bold">function</span>(d) {
+                                                                                        <span style="color: #008000; font-weight: bold">return</span>x(d.time); }) .height(
+                                                                                        <span style="color: #008000; font-weight: bold">function</span>(d) {
+                                                                                        <span style="color: #008000; font-weight: bold">return</span>y(d.y0); }) .fillStyle(
+                                                                                        <span style="color: #BA2121">&quot;rgb(121, 173, 210)&quot;</span>) .anchor(
+                                                                                        <span style="color: #BA2121">&quot;top&quot;</span>).add(pv.Line) .lineWidth(
+                                                                                        <span style="color: #666666">3</span>); vis.render(); };</pre>
+                                                                        </div>
+                                                                </td>
+                                                        </tr>
+                                                </table>
+                                        </div>
+                                        <p>In over half of the uses here, the lambda definition is the sole argument
+                                                of a function invocation, leading to an unpleasant
+                                                <tt class="docutils literal">});</tt>at the end of the definition. It&#8217;s important to visually
+                                                denote the start and end of a lambda expression, but for the sole-argument
+                                                case, the braces are redundant and add to the clutter.</p>
+                                        <p id="below">Evidently Mozilla agrees.
+                                                <a class="reference external" href="https://developer.mozilla.org/en/new_in_javascript_1.8">JavaScript 1.8</a>— which refers to Mozilla&#8217;s implementation of ECMAScript, and is
+                                                <em>not</em>a standard — includes a bit of syntactic sugar to write expression
+                                                closures: just drop the braces and
+                                                <tt class="docutils literal">return</tt>keyword from a lambda. Here&#8217;s the third example above,
+                                                written in that style:</p>
+                                        <div class="blockcode">
+                                                <table class="highlighttable">
+                                                        <tr>
+                                                                <td>
+                                                                        <div class="linenodiv" style="background-color: #f0f0f0; padding-right: 10px">
+                                                                                <pre>1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20</pre>
+                                                                        </div>
+                                                                </td>
+                                                                <td class="code">
+                                                                        <div class="highlight" style="background: #f8f8f8">
+                                                                                <pre>
+                                                                                        <span style="color: #008000; font-weight: bold">function</span>pvscatter(data, tgt_id) {
+                                                                                        <span style="color: #008000; font-weight: bold">var</span>w
+                                                                                        <span style="color: #666666">=</span>
+                                                                                        <span style="color: #666666">600</span>, h
+                                                                                        <span style="color: #666666">=</span>
+                                                                                        <span style="color: #666666">500</span>, x
+                                                                                        <span style="color: #666666">=</span>pv.Scale.linear(data,
+                                                                                        <span style="color: #008000; font-weight: bold">function</span>(d)
+                                                                                        <span style="color: #666666">0</span>,
+                                                                                        <span style="color: #008000; font-weight: bold">function</span>(d) d.y0
+                                                                                        <span style="color: #666666">&gt;</span>
+                                                                                        <span style="color: #666666">0</span>
+                                                                                        <span style="color: #666666">?</span>d.time
+                                                                                        <span style="color: #666666">:</span>
+                                                                                        <span style="color: #666666">0</span>) .range(
+                                                                                        <span style="color: #666666">0</span>, w).nice(), y
+                                                                                        <span style="color: #666666">=</span>pv.Scale.linear(data,
+                                                                                        <span style="color: #008000; font-weight: bold">function</span>(d)
+                                                                                        <span style="color: #666666">0</span>,
+                                                                                        <span style="color: #008000; font-weight: bold">function</span>(d) d.y0) .range(
+                                                                                        <span style="color: #666666">0</span>, h).nice(); vis
+                                                                                        <span style="color: #666666">=</span>
+                                                                                        <span style="color: #008000; font-weight: bold">new</span>pv.Panel().width(w).height(h).canvas(tgt_id); vis.add(pv.Area)
+                                                                                        .data(data) .bottom(
+                                                                                        <span style="color: #666666">1</span>) .left(
+                                                                                        <span style="color: #008000; font-weight: bold">function</span>(d) x(d.time)) .height(
+                                                                                        <span style="color: #008000; font-weight: bold">function</span>(d) y(d.y0)) .fillStyle(
+                                                                                        <span style="color: #BA2121">&quot;rgb(121, 173, 210)&quot;</span>) .anchor(
+                                                                                        <span style="color: #BA2121">&quot;top&quot;</span>).add(pv.Line) .lineWidth(
+                                                                                        <span style="color: #666666">3</span>); vis.render(); };</pre>
+                                                                        </div>
+                                                                </td>
+                                                        </tr>
+                                                </table>
+                                        </div>
+                                        <p>This works pretty well for the sole-argument combinators on lines 13 and
+                                                14, but I find that when multiple lambdas are being used in a single invocation
+                                                (lines 3-6), I end up missing the braces. Without them, the heaviness of
+                                                the
+                                                <tt class="docutils literal">function(d)</tt>pulls the whole expression off-balance.</p>
+                                        <p>Of course, you could simply add extra parentheses yourself, but then you&#8217;re
+                                                halfway back to the original expression. Plus I know I&#8217;d leave the
+                                                extra parentheses off most of the time, and that eventually I&#8217;d end
+                                                up with an atrocity like this in production code:</p>
+                                        <div class="blockcode">
+                                                <table class="highlighttable">
+                                                        <tr>
+                                                                <td>
+                                                                        <div class="linenodiv" style="background-color: #f0f0f0; padding-right: 10px">
+                                                                                <pre>1</pre>
+                                                                        </div>
+                                                                </td>
+                                                                <td class="code">
+                                                                        <div class="highlight" style="background: #f8f8f8">
+                                                                                <pre>alert((
+                                                                                        <span style="color: #008000; font-weight: bold">function</span>()
+                                                                                        <span style="color: #008000; font-weight: bold">function</span>()
+                                                                                        <span style="color: #008000; font-weight: bold">function</span>()
+                                                                                        <span style="color: #008000; font-weight: bold">function</span>()
+                                                                                        <span style="color: #BA2121">&quot;Yay!&quot;</span>)()()()());</pre>
+                                                                        </div>
+                                                                </td>
+                                                        </tr>
+                                                </table>
+                                        </div>
+                                        <p>(Yep, that&#8217;s valid in Firefox.)</p>
+                                        <p>Another knock against this syntax is that it doesn&#8217;t do anything
+                                                for multiple-expression statements, or single-expression statements where
+                                                you don&#8217;t return the result (as in event handlers). I have more lambdas
+                                                in my Protovis code than elsewhere, so the combinator syntax is more important,
+                                                but if you&#8217;re fixing something, you might as well fix it
+                                                <em>as hard as you can</em>.</p>
+                                        <p>So, the requirements are: lose the
+                                                <tt class="docutils literal">function</tt>keyword; require some form of bracketing but avoid redundancy;
+                                                support multiple statements, including nested lambdas; return the contained
+                                                expresson&#8217;s value, or not (without ugly boolean hacks); and look
+                                                good. After a bit of toying around, I came up with this solution, which
+                                                meets all of my goals:</p>
+                                        <div class="blockcode">
+                                                <table class="highlighttable">
+                                                        <tr>
+                                                                <td>
+                                                                        <div class="linenodiv" style="background-color: #f0f0f0; padding-right: 10px">
+                                                                                <pre>1 2 3 4 5</pre>
+                                                                        </div>
+                                                                </td>
+                                                                <td class="code">
+                                                                        <div class="highlight" style="background: #f8f8f8">
+                                                                                <pre>foo(d
+                                                                                        <span style="color: #666666">:</span>d.time);
+                                                                                        <span style="color: #408080; font-style: italic">// foo(function(d) { return d.time; });</span>bar(d
+                                                                                        <span style="color: #666666">|</span>
+                                                                                        <span style="color: #008000; font-weight: bold">do</span>(d));
+                                                                                        <span style="color: #408080; font-style: italic">// bar(function(d) { do(d); });</span>bzzz((d
+                                                                                        <span style="color: #666666">:</span>d.time), (d
+                                                                                        <span style="color: #666666">:</span>d.val));
+                                                                                        <span style="color: #408080; font-style: italic">// bzzz((function(d) { return d.time; }), (function(d) { return d.val;
+                                                                                                }));</span>
+                                                                                </pre>
+                                                                        </div>
+                                                                </td>
+                                                        </tr>
+                                                </table>
+                                        </div>
+                                        <p>The syntax is directly translated from the compact variant, shown literally,
+                                                to the expanded format shown in the comments. It&#8217;s pure sugar; by
+                                                the time the code hits an ECMAScript interpreter, all such syntax has been
+                                                replaced. I&#8217;m quite satisfied with it.</p>
+                                        <p>Here&#8217;s the first example with the new approach. There are pros and
+                                                cons regarding the loss of the internal semicolon (you can still use one,
+                                                of course), but I end up feeling that for any lambda longer than a few
+                                                characters but still comprising one statement, simply adding a space around
+                                                the statement is enough to set it off from the rest of the code. In fact,
+                                                I think it does a much better job than the original syntax at framing the
+                                                code, despite
+                                                <em>removing</em>the visual context provided by the curly-braces.</p>
+                                        <div
+                                        class="blockcode">
+                                                <table class="highlighttable">
+                                                        <tr>
+                                                                <td>
+                                                                        <div class="linenodiv" style="background-color: #f0f0f0; padding-right: 10px">
+                                                                                <pre>1 2 3 4</pre>
+                                                                        </div>
+                                                                </td>
+                                                                <td class="code">
+                                                                        <div class="highlight" style="background: #f8f8f8">
+                                                                                <pre>
+                                                                                        <span style="color: #008000; font-weight: bold">function</span>mkItem(acts, node) {
+                                                                                        <span style="color: #008000; font-weight: bold">return</span>$(
+                                                                                        <span style="color: #BA2121">&#39;&lt;div /&gt;&#39;</span>, {
+                                                                                        <span style="color: #BA2121">&#39;class&#39;</span>
+                                                                                        <span style="color: #666666">:</span>
+                                                                                        <span style="color: #BA2121">&#39;flowItem&#39;</span>}).html(node.activity) .click(
+                                                                                        <span style="color: #666666">|</span>$(
+                                                                                        <span style="color: #008000; font-weight: bold">this</span>).replaceWith(mkSel(acts, node)) ); }</pre>
+                                                                        </div>
+                                                                </td>
+                                                        </tr>
+                                                </table>
+                                </div>
+                                <p>The second example is, well, still a huge old pile of ugly. But the shorter
+                                        syntax allows statements to be indented much more intuitively. That&#8217;s
+                                        <em>not</em>a fluke, or even trivial; a lot of devs, myself included, stick
+                                        to 80-character line lengths, and when your syntax is so weighty that you
+                                        can&#8217;t fit what is logically a line in that width, things turn ugly.
+                                        The shorter syntax makes it much more likely that you&#8217;ll be able
+                                        to stick a line break where it makes the most sense.</p>
+                                <div class="blockcode">
+                                        <table class="highlighttable">
+                                                <tr>
+                                                        <td>
+                                                                <div class="linenodiv" style="background-color: #f0f0f0; padding-right: 10px">
+                                                                        <pre>1 2 3 4 5 6 7 8 9 10 11 12 13</pre>
+                                                                </div>
+                                                        </td>
+                                                        <td class="code">
+                                                                <div class="highlight" style="background: #f8f8f8">
+                                                                        <pre>
+                                                                                <span style="color: #008000; font-weight: bold">function</span>mkProb(node, choice) {
+                                                                                <span style="color: #008000; font-weight: bold">return</span>$(
+                                                                                <span style="color: #BA2121">&#39;&lt;div /&gt;&#39;</span>, {
+                                                                                <span style="color: #BA2121">&#39;class&#39;</span>
+                                                                                <span style="color: #666666">:</span>
+                                                                                <span style="color: #BA2121">&quot;flowProb&quot;</span>}).html(choice.prob).click(
+                                                                                <span style="color: #666666">|</span>$(
+                                                                                <span style="color: #008000; font-weight: bold">this</span>).replaceWith( $(
+                                                                                <span style="color: #BA2121">&#39;&lt;div /&gt;&#39;</span>, {
+                                                                                <span style="color: #BA2121">&#39;class&#39;</span>
+                                                                                <span style="color: #666666">:</span>
+                                                                                <span style="color: #BA2121">&#39;flowProbStatic&#39;</span>}).html( $(
+                                                                                <span style="color: #BA2121">&#39;&lt;input /&gt;&#39;</span>, {
+                                                                                <span style="color: #BA2121">&#39;type&#39;</span>
+                                                                                <span style="color: #666666">:</span>
+                                                                                <span style="color: #BA2121">&#39;text&#39;</span>,
+                                                                                <span style="color: #BA2121">&#39;value&#39;</span>
+                                                                                <span style="color: #666666">:</span>choice.prob}).change(
+                                                                                <span style="color: #666666">|</span>
+                                                                                <span style="color: #008000; font-weight: bold">var</span>newVal
+                                                                                <span style="color: #666666">=</span>
+                                                                                <span style="color: #008000">parseFloat</span>($(
+                                                                                <span style="color: #008000; font-weight: bold">this</span>).val()); choice.prob
+                                                                                <span style="color: #666666">=</span>(newVal
+                                                                                <span style="color: #666666">==</span>
+                                                                                <span style="color: #008000; font-weight: bold">NaN</span>)
+                                                                                <span style="color: #666666">?</span>
+                                                                                <span style="color: #666666">0</span>
+                                                                                <span style="color: #666666">:</span>newVal; updateChoices(node); ) ) ) ); }</pre>
+                                                                </div>
+                                                        </td>
+                                                </tr>
+                                        </table>
+                                </div>
+                                <p>Finally, the Protovis example, demonstrating multiple lambda arguments
+                                        to one function. The somewhat lighter
+                                        <tt class="docutils literal">:</tt>character causes combinator lambdas (those that evaluate and return
+                                        one statement) to stand out less than the
+                                        <tt class="docutils literal">|</tt>-separated lambdas, which is appropriate for combinator-rich code
+                                        like Protovis. Note also that the syntax is unfazed by the ternary operator
+                                        on line 3.</p>
+                                <div class="blockcode">
+                                        <table class="highlighttable">
+                                                <tr>
+                                                        <td>
+                                                                <div class="linenodiv" style="background-color: #f0f0f0; padding-right: 10px">
+                                                                        <pre>1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18</pre>
+                                                                </div>
+                                                        </td>
+                                                        <td class="code">
+                                                                <div class="highlight" style="background: #f8f8f8">
+                                                                        <pre>
+                                                                                <span style="color: #008000; font-weight: bold">function</span>pvscatter(data, tgt_id) {
+                                                                                <span style="color: #008000; font-weight: bold">var</span>w
+                                                                                <span style="color: #666666">=</span>
+                                                                                <span style="color: #666666">600</span>, h
+                                                                                <span style="color: #666666">=</span>
+                                                                                <span style="color: #666666">500</span>, x
+                                                                                <span style="color: #666666">=</span>pv.Scale.linear(data, (d
+                                                                                <span style="color: #666666">:</span>
+                                                                                <span style="color: #666666">0</span>), (d
+                                                                                <span style="color: #666666">:</span>d.y0
+                                                                                <span style="color: #666666">&gt;</span>
+                                                                                <span style="color: #666666">0</span>
+                                                                                <span style="color: #666666">?</span>d.time
+                                                                                <span style="color: #666666">:</span>
+                                                                                <span style="color: #666666">0</span>)) .range(
+                                                                                <span style="color: #666666">0</span>, w).nice(), y
+                                                                                <span style="color: #666666">=</span>pv.Scale.linear(data, (d
+                                                                                <span style="color: #666666">:</span>
+                                                                                <span style="color: #666666">0</span>), (d
+                                                                                <span style="color: #666666">:</span>d.y0)).range(
+                                                                                <span style="color: #666666">0</span>, h).nice(); vis
+                                                                                <span style="color: #666666">=</span>
+                                                                                <span style="color: #008000; font-weight: bold">new</span>pv.Panel().width(w).height(h).canvas(tgt_id); vis.add(pv.Area)
+                                                                                .data(data) .bottom(
+                                                                                <span style="color: #666666">1</span>) .left(d
+                                                                                <span style="color: #666666">:</span>x(d.time)) .height(d
+                                                                                <span style="color: #666666">:</span>y(d.y0)) .fillStyle(
+                                                                                <span style="color: #BA2121">&quot;rgb(121, 173, 210)&quot;</span>) .anchor(
+                                                                                <span style="color: #BA2121">&quot;top&quot;</span>).add(pv.Line) .lineWidth(
+                                                                                <span style="color: #666666">3</span>); vis.render(); };</pre>
+                                                                </div>
+                                                        </td>
+                                                </tr>
+                                        </table>
+                                </div>
+                        </div>
+                        <div class="section" id="works-for-me">
+                                <h2>
+                                        <a class="toc-backref" href="#id14">&quot;Works for me&quot;</a>
+                                </h2>
+                                <p>So far, I&#8217;ve loved using my syntax. It meets all of my needs. I
+                                        am
+                                        <em>not</em>, however, suggesting that it meets all of yours. Syntax debates
+                                        are tend to be vigorous and (ironically) quite verbose
+                                        <sup>
+                                                <a class="footnote-reference" href="#id7" id="id6">3</a>
+                                        </sup>
+                                        <span class="fntarget" id="id7_target"></span>. I don&#8217;t mean to stir one up here.</p>
+                                <div class="fnwrap">
+                                        <p class="footnote" id="id7">
+                                                <a class="fn-backref" href="#id6">3</a>For an example about JS lambdas, see a mammoth discussion on Mozilla&#8217;s
+                                                ECMAScript mailing list that starts
+                                                <a class="reference external" href="https://mail.mozilla.org/pipermail/es-discuss/2008-November/008216.html">here</a>and continues over
+                                                <a class="reference external" href="https://mail.mozilla.org/pipermail/es-discuss/2008-November/thread.html">two</a>
+                                                <a class="reference external" href="https://mail.mozilla.org/pipermail/es-discuss/2008-December/thread.html">months</a>and hundreds of messages. There are, I&#8217;m sure, many similar discussions
+                                                out there.</p>
+                                </div>
+                                <p>But, regardless of which JavaScript lambda syntax you prefer, I
+                                        <em>do</em>recommend that you go implement one in your own projects. The result
+                                        should be fully standards-compliant, and can be done with no performance
+                                        overhead in production. It&#8217;s a great way to try out experimental
+                                        syntax in real-world code to see what sticks, and — since you&#8217;ve
+                                        got a parser anyway — trivial to change syntaxes (or even revert to standard
+                                        ECMAScript) later. And if your experience is anything like mine, the pleasure
+                                        of using the improved syntax is entirely worth the effort.</p>
+                        </div>
+                </div>
+                <div style="font-size: 90%; padding-top: 2.5em;">Other formats:
+                        <a href="/js_lambda/js_lambda.pdf">PDF</a>.
+                        <a href="/js_lambda/js_lambda.rst">ReStructuredText source</a>.</div>
+                </div>
+                </div>
+                </div>
+                <div class="footer">
+                        <div class="fbar ftop">
+                                <div class="iwrap">
+                                        <div class="bcen1">
+                                                <span>
+                                                        <div class="ftop1 fhdr">
+                                                                <a class="ftop1l" href="/">strobe.cc</a>
+                                                        </div>
+                                                </span>
+                                                <div class="w5 fl">
+                                                        <div class="fhdr">I'm Steven Robertson.</div>I write things for you and post them here.
+                                                        I'm a hacker and musician who wants to help.</div>
+                                                <div class="w6 fr">
+                                                        <div class="fhdr">Current project</div>A renderer for
+                                                        <a href="http://flam3.com">fractal flames</a>on CUDA (between freelance jobs and waiting to take one final class at
+                                                        <a
+                                                        href="http://ucf.edu/">UCF</a>). After that, I'll get back to
+                                                                <a href="http://code.google.com/p/quodlibet/">Quod Libet</a>, then start something new.</div>
+                                        </div>
+                                </div>
+                        </div>
+                        <div class="fbar fbot">
+                                <div class="iwrap">
+                                        <div class="bcen1">
+                                                <div class="w5 fl">
+                                                        <div class="fs9 fsi">Copyright 2009 by
+                                                                <span xmlns:dc="http://purl.org/dc/elements/1.1/" href="http://purl.org/dc/dcmitype/Text"
+                                                                rel="dc:type"></span>
+                                                                <a xmlns:cc="http://creativecommons.org/ns#" href="http://strobe.cc"
+                                                                property="cc:attributionName" rel="cc:attributionURL">Steven Robertson</a>.
+                                                                <br />
+                                                                <a rel="license" href="http://creativecommons.org/licenses/by/3.0/us/">CC Attribution 3.0 US</a>.
+                                                                <a xmlns:dc="http://purl.org/dc/elements/1.1/" href="http://strobe.cc"
+                                                                rel="dc:source"></a>
+                                                                <br />steven@strobe.cc / +1 (813) 728 7254</div>
+                                                </div>
+                                                <div class="w6 fr">
+                                                        <div class="fhdr">I can be your friend.</div>
+                                                        <div class="fhdra">You should follow me on
+                                                                <a href="http://twitter.com/_srobertson/">Twitter.</a>
+                                                        </div>
+                                                        <div class="fhdr">You can be my boss.</div>
+                                                        <div class="fhdra">I will be graduating soon.
+                                                                <a href="/hire_me/">Make me yours.</a>
+                                                        </div>
+                                                        <br />
+                                                        <br />
+                                                </div>
+                                        </div>
+                                </div>
+                        </div>
+                </div>
+        </body>
+
+</html>
